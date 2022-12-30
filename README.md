@@ -9,12 +9,10 @@ Install this module by copying it into your *~/.textadept/modules/* directory or
 
 ## Compiling
 
-Releases include binaries, so building this modules should not be necessary. If you want
-to build manually, use CMake. For example:
+This is a pure Lua implementation that only needs to include a couple of external file. You have a
+Makefile to include dependencies:
 
-    cmake -S . -B build_dir
-    cmake --build build_dir --target diff
-    cmake --install build_dir
+    make deps
 
 ## Usage
 
@@ -35,16 +33,17 @@ even if one buffer has a change and the other does not (additions or deletions).
 
 ## Key Bindings
 
+I've kept the old key bindings. Too much time using them to change :)
+
 Windows and Linux | macOS | Terminal | Command
 -|-|-|-
 **Tools**| | |
-F6 | F6 | None | Compare files...
-Shift+F6 | ⇧F6 | None | Compare the buffers in two split views
-Ctrl+F6 | ⌘F6 | None | Stop comparing
-Ctrl+Alt+. | ^⌘. | None | Goto next difference
-Ctrl+Alt+, | ^⌘, | None | Goto previous difference
-Ctrl+Alt+< | ^⌘< | None | Merge left
-Ctrl+Alt+> | ^⌘> | None | Merge right
+-- F6 | F6 | F6 | Compare files...
+-- Shift+F6 | ⇧F6 | S-F6 | Compare the buffers in two split views
+-- Alt+Down | ⌥⇣ | M-Down | Goto next difference
+-- Alt+Up | ⌥⇡ | M-Up | Goto previous difference
+-- Alt+Left | ⌥⇠ | M-Left | Merge left
+-- Alt+Right | ⌥⇢ | M-Right | Merge right
 
 
 ## Fields defined by `file_diff`

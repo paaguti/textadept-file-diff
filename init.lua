@@ -18,14 +18,11 @@ local M = {}
 --
 --     require('file_diff')
 --
--- ### Compiling
+-- ### Installing
 --
--- Releases include binaries, so building this modules should not be necessary. If you want
--- to build manually, use CMake. For example:
+-- This pure Lua version needs to install some external dependencies with
 --
---     cmake -S . -B build_dir
---     cmake --build build_dir --target diff
---     cmake --install build_dir
+--     make deps
 --
 -- ### Usage
 --
@@ -99,15 +96,6 @@ if not rawget(_L, 'Compare Files') then
   _L['Stop Comparing'] = '_Stop Comparing'
 end
 
--- local lib = 'file_diff.diff'
--- if OSX then
---   lib = lib .. 'osx'
--- elseif WIN32 and CURSES then
---   lib = lib .. '-curses'
--- end
--- local diff = require(lib)
--- local DELETE, INSERT = 0, 1 -- C++: "enum Operation {DELETE, INSERT, EQUAL};"
-
 -- from diff_match_patch.lua
 -- local DIFF_DELETE = -1
 -- local DIFF_INSERT = 1
@@ -159,6 +147,18 @@ local function count_lines(text)
   for _ in text:gmatch('\n') do lines = lines + 1 end
   return lines
 end
+
+--[[
+-- Returns a list that represents the differences between strings *text1* and *text2*.
+-- Each consecutive pair of elements in the returned list represents a "diff". The first element
+-- is an integer: 1 for a deletion, 1 for an insertion, and 0 for equality. The second element
+-- is the associated diff text.
+-- @param text1 String to compare against.
+-- @param text2 String to compare.
+-- @return list of differences
+-- @usage diffs = diff(text1, text2)
+   --        for i = 1, #diffs do print(diffs[i][1], diffs[i][2]) end
+]]
 
 function M.diff(text1, text2)
    local diffs = diff.diff_main(text1, text2)
@@ -591,17 +591,3 @@ keys[GUI and 'alt+left' or 'meta+left'] = m_tools[_L['Compare Files']][_L['Merge
 keys[GUI and 'alt+right' or 'meta+right'] = M.merge
 
 return M
-
---[[ The function below is a Lua C function.
----
--- Returns a list that represents the differences between strings *text1* and *text2*.
--- Each consecutive pair of elements in the returned list represents a "diff". The first element
--- is an integer: 0 for a deletion, 1 for an insertion, and 2 for equality. The second element
--- is the associated diff text.
--- @param text1 String to compare against.
--- @param text2 String to compare.
--- @return list of differences
--- @usage diffs = diff(text1, text2)
---        for i = 1, #diffs, 2 do print(diffs[i], diffs[i + 1]) end
-function _G.diff(text1, text2) end
-]]

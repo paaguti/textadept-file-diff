@@ -1,5 +1,12 @@
 -- Copyright 2015-2022 Mitchell. See LICENSE.
 
+package.path = table.concat({
+  _USERHOME..'/modules/file_diff/diff_match_patch/?.lua',
+  package.path
+}, ';');
+
+local diff = require 'diff_match_patch'
+
 local M = {}
 
 --[[ This comment is for LuaDoc.
@@ -42,13 +49,13 @@ local M = {}
 -- Windows and Linux | macOS | Terminal | Command
 -- -|-|-|-
 -- **Tools**| | |
--- F6 | F6 | None | Compare files...
--- Shift+F6 | ⇧F6 | None | Compare the buffers in two split views
--- Ctrl+F6 | ⌘F6 | None | Stop comparing
--- Ctrl+Alt+. | ^⌘. | None | Goto next difference
--- Ctrl+Alt+, | ^⌘, | None | Goto previous difference
--- Ctrl+Alt+< | ^⌘< | None | Merge left
--- Ctrl+Alt+> | ^⌘> | None | Merge right
+--- F6 | F6 | None | Compare files...
+--- Shift+F6 | ⇧F6 | None | Compare the buffers in two split views
+--- Ctrl+F6 | ⌘F6 | None | Stop comparing
+--- Ctrl+Alt+. | ^⌘. | None | Goto next difference
+--- Ctrl+Alt+, | ^⌘, | None | Goto previous difference
+--- Ctrl+Alt+< | ^⌘< | None | Merge left
+--- Ctrl+Alt+> | ^⌘> | None | Merge right
 --
 -- @field MARK_ADDITION (number)
 --   The marker for line additions.
@@ -93,10 +100,10 @@ if not rawget(_L, 'Compare Files') then
   _L['Stop Comparing'] = '_Stop Comparing'
 end
 
-local lib = 'file_diff.diff'
-if OSX then lib = lib .. 'osx' end
-local diff = require(lib)
-local DELETE, INSERT = 0, 1 -- C++: "enum Operation {DELETE, INSERT, EQUAL};"
+-- from diff_match_patch.lua
+-- local DIFF_DELETE = -1
+-- local DIFF_INSERT = 1
+local DELETE, INSERT = -1, 1
 
 local view1, view2
 
@@ -151,14 +158,15 @@ local function mark_changes()
   clear_marked_changes() -- clear previous marks
   local buffer1, buffer2 = view1.buffer, view2.buffer
   -- Perform the diff.
-  local diffs = diff(buffer1:get_text(), buffer2:get_text())
+  local diffs = diff.diff_main(buffer1:get_text(), buffer2:get_text())
   -- Parse the diff, marking modified lines and changed text.
   local pos1, pos2 = 1, 1
-  for i = 1, #diffs, 2 do
-    local op, text = diffs[i], diffs[i + 1]
+  --  #diffs - 1 because we have a diffs[i+1]
+  for i = 1, #diffs - 1 do
+    local op, text = diffs[i][1], diffs[i][2]
     local text_len = #text
     if op == DELETE then
-      local next_op, next_text = diffs[i + 2], diffs[i + 3]
+      local next_op, next_text = diffs[i + 1][1], diffs[i + 1][2]
       -- Mark partial lines as modified and full lines as deleted.
       local start_line = buffer1:line_from_position(pos1)
       local end_line = buffer1:line_from_position(pos1 + text_len)
@@ -216,7 +224,7 @@ local function mark_changes()
         end
       end
     elseif op == INSERT then
-      local prev_op, prev_text = diffs[i - 2], diffs[i - 1]
+      local prev_op, prev_text = diffs[i - 1][1], diffs[i - 1][2]
       -- Mark partial lines as modified and full lines as deleted.
       local start_line = buffer2:line_from_position(pos2)
       local end_line = buffer2:line_from_position(pos2 + text_len)
@@ -556,29 +564,15 @@ for i = 1, #m_tools - 1 do
     end
   end
 end
-if not CURSES then
-  keys.f6 = M.start
-  keys['shift+f6'] = m_tools[_L['Compare Files']][_L['Compare Buffers']][2]
-  keys[not OSX and 'ctrl+f6' or 'cmd+f6'] = m_tools[_L['Compare Files']][_L['Stop Comparing']][2]
-  keys[not OSX and 'ctrl+alt+.' or 'ctrl+cmd+.'] =
-    m_tools[_L['Compare Files']][_L['Next Change']][2]
-  keys[not OSX and 'ctrl+alt+,' or 'ctrl+cmd+,'] = M.goto_change
-  keys[not OSX and 'ctrl+alt+<' or 'ctrl+cmd+<'] = m_tools[_L['Compare Files']][_L['Merge Left']][2]
-  keys[not OSX and 'ctrl+alt+>' or 'ctrl+cmd+>'] = M.merge
-end
+--
+-- FTMB keeping the old keys
+--
+local GUI = not CURSES
+keys.f6 = M.start
+keys['shift+f6'] = m_tools[_L['Compare Files']][_L['Compare Buffers']][2]
+keys[GUI and 'alt+down' or 'meta+down'] = m_tools[_L['Compare Files']][_L['Next Change']][2]
+keys[GUI and 'alt+up' or 'meta+up'] = M.goto_change
+keys[GUI and 'alt+left' or 'meta+left'] = m_tools[_L['Compare Files']][_L['Merge Left']][2]
+keys[GUI and 'alt+right' or 'meta+right'] = M.merge
 
 return M
-
---[[ The function below is a Lua C function.
----
--- Returns a list that represents the differences between strings *text1* and *text2*.
--- Each consecutive pair of elements in the returned list represents a "diff". The first element
--- is an integer: 0 for a deletion, 1 for an insertion, and 2 for equality. The second element
--- is the associated diff text.
--- @param text1 String to compare against.
--- @param text2 String to compare.
--- @return list of differences
--- @usage diffs = diff(text1, text2)
---        for i = 1, #diffs, 2 do print(diffs[i], diffs[i + 1]) end
-function _G.diff(text1, text2) end
-]]

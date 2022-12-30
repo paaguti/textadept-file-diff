@@ -92,11 +92,14 @@ Parameters:
 Usage:
 
 * `diffs = diff(text1, text2)
-       for i = 1, #diffs, 2 do print(diffs[i], diffs[i + 1]) end`
+   for i = 1, #diffs, do
+       print(diffs[i][1], diffs[i][2])
+   end`
 
 Return:
 
-* list of differences
+* list of differences as a table of tables.
+  diffs[i][1] is the operation; diffs[i][2] is the text
 
 <a id="file_diff.goto_change"></a>
 ### `file_diff.goto_change`(*next*)

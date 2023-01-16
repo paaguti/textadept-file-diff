@@ -9,10 +9,18 @@ Install this module by copying it into your *~/.textadept/modules/* directory or
 
 ## Compiling
 
-This is a pure Lua implementation that only needs to include a couple of external file. You have a
-Makefile to include dependencies:
+This is a pure Lua implementation that only needs to include external files:
+
+1. `diff_patch_match.lua` from https://github.com/google/diff-patch-match
+2. `bit32.lua` Lua from the Lua source
+
+`diff_patch_match.lua` needs to be patched, because TextAdept doesn't include
+Lua libraries like bit32.
+
+You have a Makefile to include and patch dependencies with:
 
     make deps
+
 
 ## Usage
 
